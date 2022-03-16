@@ -1,161 +1,217 @@
-#pragma once
-#include <stdlib.h>
-namespace data {
-    // dynamic vector of scalar (constructorless) data
-    template <typename T>
-    class simple_vector final {
-        void* (*m_allocator)(size_t);
-        void* (*m_reallocator)(void*, size_t);
-        void (*m_deallocator)(void*);
-        size_t m_size;  // size in number of T values
-        T* m_begin;
-        size_t m_capacity;  // allocated size in T values
-        bool resize(size_t new_size) {
-            size_t capacity = new_size;
-            if (capacity > this->m_capacity) {
-                size_t newcap = capacity + (this->m_capacity >> 1u);
-                void* data ;
-                if(this->m_begin) {
-                    data = m_reallocator(this->m_begin, newcap * sizeof(T));
-                } else {
-                    newcap=8;
-                    const size_t newsz = newcap*sizeof(T);
-                    data = m_allocator(newsz);
-                }
-                if (data) {
-                    this->m_capacity = newcap;
-                    this->m_begin = (T*)data;
-                } else
-                    return false; //error: not enough memory
-            }
-            this->m_size = new_size;
-            return true;
-        }
+#ifndef HTCW_STREAM_HPP
+#define HTCW_STREAM_HPP
 
+#ifdef ARDUINO
+#include <Arduino.h>
+// HACK!
+#ifdef SAMD_SERIES 
+    #define IO_NO_FS
+#endif
+#ifdef ARDUINO_ARCH_STM32
+    #define IO_NO_FS
+#endif
+
+#ifndef IO_NO_FS
+    #ifdef IO_ARDUINO_SD_FS
+        #include <SD.h>
+    #else
+        #include <FS.h>
+    #endif
+#endif
+// TODO: Fix this ifdef so the AVR is the one that is special cased:
+#ifdef ESP32
+    #include <pgmspace.h>
+#else
+    #include <avr/pgmspace.h>
+#endif
+#else
+    #include <stdio.h>
+    #include <string.h>
+    #include <inttypes.h>
+#endif
+namespace io {
+    struct stream_caps {
+        uint8_t read : 1;
+        uint8_t write : 1;
+        uint8_t seek :1;
+    };
+    enum struct seek_origin {
+        start = 0,
+        current = 1,
+        end = 2
+    };
+    class stream {
     public:
-        simple_vector(void*(allocator)(size_t) = ::malloc,
-                    void*(reallocator)(void*, size_t) = ::realloc,
-                    void(deallocator)(void*) = ::free) : 
-                        m_allocator(allocator),
-                        m_reallocator(reallocator),
-                        m_deallocator(deallocator) {
-            m_begin = nullptr;
-            m_size = 0;
-            m_capacity = 0;
+        virtual int getc()=0;
+        virtual size_t read(uint8_t* destination,size_t size)=0;
+        virtual int putc(int value)=0;
+        virtual size_t write(const uint8_t* source,size_t size)=0;
+        virtual unsigned long long seek(long long position,seek_origin origin=seek_origin::start)=0;
+        virtual stream_caps caps() const=0;
+        template<typename T>
+        size_t read(T* out_value) {
+            return read((uint8_t*)out_value,sizeof(T));
         }
-        ~simple_vector() {
-            m_size = 0;
-            if (m_begin != nullptr) {
-                m_deallocator(m_begin);
-                m_begin = nullptr;
-            }
+        template<typename T>
+        T read(const T& default_value=T()) {
+            T result;
+            if(sizeof(T)!=read(&result))
+                return default_value;
+            return result;
         }
-        inline size_t size() const { return m_size; }
-        inline size_t capacity() const { return m_capacity; }
-        inline const T* cbegin() const { return m_begin; }
-        inline const T* cend() const { return m_begin + m_size; }
-        inline T* begin() { return m_begin; }
-        inline T* end() { return m_begin + m_size; }
-        void clear() {
-            if(m_begin) {
-                m_size = 0;
-                m_capacity = 0;
-                m_deallocator(m_begin);
-                m_begin = nullptr;
-            }
-        }
-        bool push_back(const T& value) {
-            if (!resize(m_size + 1)) {
-                return false;
-            }
-            m_begin[m_size - 1] = value;
-            return true;
+        template<typename T>
+        size_t write(const T& value) {
+            return write((uint8_t*)&value,sizeof(T));
         }
     };
-    template<typename TKey, typename TValue> 
-    struct simple_pair {
-        TKey key;
-        TValue value;
-        simple_pair(TKey key,TValue value) : key(key), value(value) {
-
-        }
-        simple_pair(const simple_pair& rhs) {
-            key = rhs.key;
-            value = rhs.value;
-        }
-        simple_pair& operator=(const simple_pair& rhs) {
-            key = rhs.key;
-            value = rhs.value;
-            return *this;
-        }
-        simple_pair(simple_pair&& rhs) {
-            key = rhs.key;
-            value = rhs.value;
-        }
-        simple_pair& operator=(simple_pair&& rhs) {
-            key = rhs.key;
-            value = rhs.value;
-            return *this;
-        }
+    enum struct file_mode {
+        read = 1,
+        write = 2,
+        append = 6
     };
-    template<typename TKey,typename TValue, size_t Size> 
-    class simple_fixed_map final {
-        static_assert(Size>0,"Size must be a positive integer");
-        using bucket_type = simple_vector<simple_pair<TKey,TValue>>;
-        bucket_type m_buckets[Size];
+    class buffer_stream final : public stream {
+        uint8_t* m_begin;
+        uint8_t* m_current;
         size_t m_size;
-        int(*m_hash_function)(const TKey&);
+        buffer_stream(const buffer_stream& rhs)=delete;
+        buffer_stream& operator=(const buffer_stream& rhs)=delete;
     public:
-        simple_fixed_map(int(*hash_function)(const TKey&),
-                        void*(allocator)(size_t) = ::malloc,
-                        void*(reallocator)(void*, size_t) = ::realloc,
-                        void(deallocator)(void*) = ::free) : m_hash_function(hash_function),m_size(0) {
-            for(int i = 0;i<Size;++i) {
-                m_buckets[i]=bucket_type(allocator,reallocator,deallocator);
-            }
-        }
-        using key_type = TKey;
-        using mapped_type = TValue;
-        using value_type = simple_pair<TKey,TValue>;
-        inline size_t size() const { return m_size; }
-        void clear() {
-            m_size = 0;
-            for(int i = 0;i<Size;++i) {
-                m_buckets->clear();
-            }
-        }
-        bool insert(const value_type& value) {
-            int h = m_hash_function(value.key)%Size;
-            bucket_type& bucket = m_buckets[h];
-            if(bucket.size()) {
-                auto it = bucket.cbegin();
-                while(it!=bucket.cend()) {
-                    if(it->key==value.key) {
-                        return false;
-                    }
-                    ++it;
-                }
-            }
-            
-            if(bucket.push_back({value.key,value.value})) {
-                ++m_size;
-            }
-        }
-        const mapped_type* find(const key_type& key) const {
-            int h = m_hash_function(key)%Size;
-            const bucket_type& bucket = m_buckets[h];
-            if(bucket.size()) {
-                auto it = bucket.cbegin();
-                while(it!=bucket.cend()) {
-                    if(it->key==key) {
-                        return &it->value;
-                    }
-                    ++it;
-                }
-            }
-            return nullptr;
-        }
-        
+        buffer_stream();
+        buffer_stream(uint8_t* buffer,size_t size);
+        buffer_stream(buffer_stream&& rhs);
+        buffer_stream& operator=(buffer_stream&& rhs);
+        uint8_t* handle();
+        void set(uint8_t* buffer,size_t size);
+        virtual int getc();
+        virtual int putc(int value);
+        virtual stream_caps caps() const;
+        virtual size_t read(uint8_t* destination,size_t size);
+        virtual size_t write(const uint8_t* source,size_t size);
+        virtual unsigned long long seek(long long position,seek_origin origin=seek_origin::start);
     };
-    
-}  // namespace data
+    class const_buffer_stream final : public stream {
+        const uint8_t* m_begin;
+        const uint8_t* m_current;
+        size_t m_size;
+        const_buffer_stream(const const_buffer_stream& rhs)=delete;
+        const_buffer_stream& operator=(const const_buffer_stream& rhs)=delete;
+    public:
+        const_buffer_stream();
+        const_buffer_stream(const uint8_t* buffer,size_t size);
+        const_buffer_stream(const_buffer_stream&& rhs);
+        const_buffer_stream& operator=(const_buffer_stream&& rhs);
+        const uint8_t* handle() const;
+        void set(const uint8_t* buffer,size_t size);
+        virtual int getc();
+        virtual int putc(int value);
+        virtual stream_caps caps() const;
+        virtual size_t read(uint8_t* destination,size_t size);
+        virtual size_t write(const uint8_t* source,size_t size);
+        virtual unsigned long long seek(long long position,seek_origin origin=seek_origin::start);
+    };
+#ifdef ARDUINO
+
+    class arduino_stream final : public stream {
+        Stream* m_stream;
+        arduino_stream(const arduino_stream& rhs) = delete;
+        arduino_stream& operator=(const arduino_stream& rhs)=delete;
+    public:
+        arduino_stream(Stream* stream);
+        arduino_stream(arduino_stream&& rhs);
+        arduino_stream& operator=(arduino_stream&& rhs);
+        virtual size_t read(uint8_t* destination,size_t size);
+        virtual int getc();
+        virtual size_t write(const uint8_t* source,size_t size);
+        virtual int putc(int value);
+        virtual unsigned long long seek(long long position, seek_origin origin=seek_origin::start);
+        virtual stream_caps caps() const;
+    };
+#endif
+#ifndef IO_NO_FS
+    class file_stream final : public stream {
+#ifdef ARDUINO
+        File& m_file;
+#else
+        FILE* m_fd;
+#endif
+        stream_caps m_caps;
+        file_stream(const file_stream& rhs) = delete;
+        file_stream& operator=(const file_stream& rhs)=delete;
+    public:
+#ifdef ARDUINO
+        file_stream(File& file);
+        file_stream(file_stream&& rhs);
+        file_stream& operator=(file_stream&& rhs);
+        ~file_stream();
+        File& handle() const;
+        void set(File& file);
+        virtual size_t read(uint8_t* destination,size_t size);
+        virtual int getc();
+        virtual size_t write(const uint8_t* source,size_t size);
+        virtual int putc(int value);
+        virtual unsigned long long seek(long long position, seek_origin origin=seek_origin::start);
+        void close();
+#else
+        file_stream(const char* name,file_mode mode=file_mode::read);
+        file_stream(file_stream&& rhs);
+        file_stream& operator=(file_stream&& rhs);
+        ~file_stream();
+        FILE* handle() const;
+        void set(const char* name,file_mode mode = file_mode::read);
+        virtual size_t read(uint8_t* destination,size_t size);
+        virtual int getc();
+        virtual size_t write(const uint8_t* source,size_t size);
+        virtual int putc(int value);
+        virtual unsigned long long seek(long long position, seek_origin origin=seek_origin::start);
+        void close();
+#endif
+        virtual stream_caps caps() const;
+    };
+#endif
+    class stream_reader_base {
+    protected:
+        stream* m_stream;
+        stream_reader_base(io::stream* stream) : m_stream(stream) {
+        }
+    public:
+        inline bool initialized() const {
+            return m_stream!=nullptr;
+        }
+        inline stream* base_stream() const {
+            return m_stream;
+        }
+    };
+    class stream_reader_le : public stream_reader_base {
+     public:
+        stream_reader_le(io::stream* stream);
+        bool read(uint8_t* out_value) const;
+        bool read(uint16_t* out_value) const;
+        bool read(uint32_t* out_value) const;
+#if HTCW_MAX_WORD >= 64
+        bool read(uint64_t* out_value) const;
+#endif
+        bool read(int8_t* out_value) const;
+        bool read(int16_t* out_value) const;
+        bool read(int32_t* out_value) const;
+#if HTCW_MAX_WORD >= 64
+        bool read(int64_t* out_value) const;
+#endif
+    };
+    class stream_reader_be : public stream_reader_base {
+    public:
+        stream_reader_be(io::stream* stream);
+        bool read(uint8_t* out_value) const;
+        bool read(uint16_t* out_value) const;
+        bool read(uint32_t* out_value) const;
+#if HTCW_MAX_WORD >= 64
+        bool read(uint64_t* out_value) const;
+#endif
+        bool read(int8_t* out_value) const;
+        bool read(int16_t* out_value) const;
+        bool read(int32_t* out_value) const;
+#if HTCW_MAX_WORD >= 64
+        bool read(int64_t* out_value) const;
+#endif
+    };
+}
+#endif
