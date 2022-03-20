@@ -1,6 +1,6 @@
 #ifndef HTCW_STREAM_HPP
 #define HTCW_STREAM_HPP
-
+#include <htcw_bits.hpp>
 #ifdef ARDUINO
 #include <Arduino.h>
 // HACK!

@@ -1,6 +1,6 @@
 {
     "name": "htcw_io",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Provides io classes",
     "keywords": ["stream","io"],
     "authors": {
