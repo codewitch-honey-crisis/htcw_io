@@ -3,14 +3,15 @@
 #include <htcw_bits.hpp>
 #ifdef ARDUINO
 #include <Arduino.h>
-// HACK!
 #ifdef SAMD_SERIES 
     #define IO_NO_FS
 #endif
 #ifdef ARDUINO_ARCH_STM32
     #define IO_NO_FS
 #endif
-
+#if defined(ARDUINO_ARDUINO_NANO33BLE) || defined(ARDUINO_ARCH_MBED_RP2040)|| defined(ARDUINO_ARCH_RP2040)
+    #define IO_NO_FS
+#endif
 #ifndef IO_NO_FS
     #ifdef IO_ARDUINO_SD_FS
         #include <SD.h>
@@ -18,11 +19,12 @@
         #include <FS.h>
     #endif
 #endif
-// TODO: Fix this ifdef so the AVR is the one that is special cased:
-#ifdef ESP32
-    #include <pgmspace.h>
+#if defined(ESP_PLATFORM) || defined(ARDUINO_ARCH_ESP8266)
+#include <pgmspace.h>
+#elif defined(ARDUINO_ARDUINO_NANO33BLE) || defined(ARDUINO_ARCH_MBED_RP2040)|| defined(ARDUINO_ARCH_RP2040)
+#include <api/deprecated-avr-comp/avr/pgmspace.h>
 #else
-    #include <avr/pgmspace.h>
+#include <avr/pgmspace.h>
 #endif
 #else
     #include <stdio.h>
