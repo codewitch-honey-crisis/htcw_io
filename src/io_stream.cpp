@@ -25,12 +25,12 @@ namespace io {
         m_size = size;
         if(nullptr==buffer) m_size=0;
     }
-    int buffer_stream::getc() {
+    int buffer_stream::getch() {
         if(nullptr==m_current || (size_t)(m_current-m_begin)>=m_size)
             return -1;
         return *(m_current++);
     }
-    int buffer_stream::putc(int value) {
+    int buffer_stream::putch(int value) {
         if(nullptr==m_current || (size_t)(m_current-m_begin)>=m_size)
             return -1;
         return *(m_current++)=(uint8_t)value;
@@ -123,7 +123,7 @@ namespace io {
         m_size = size;
         if(nullptr==buffer) m_size=0;
     }
-    int const_buffer_stream::getc() {
+    int const_buffer_stream::getch() {
         if(nullptr==m_current || (size_t)(m_current-m_begin)>=m_size)
             return -1;
 #if defined(ARDUINO) && !defined(ESP32)
@@ -132,7 +132,7 @@ namespace io {
         return *(m_current++);
 #endif
     }
-    int const_buffer_stream::putc(int value) {
+    int const_buffer_stream::putch(int value) {
         return -1;
     }
     stream_caps const_buffer_stream::caps() const {
@@ -212,7 +212,7 @@ namespace io {
         if(nullptr==m_stream) return 0;
         return m_stream->readBytes(destination,size);
     }
-    int arduino_stream::getc() {
+    int arduino_stream::getch() {
         if(nullptr==m_stream) return -1;
         return m_stream->read();
     }
@@ -220,7 +220,7 @@ namespace io {
         if(nullptr==m_stream) return 0;
         return m_stream->write(source,size);
     }
-    int arduino_stream::putc(int value) {
+    int arduino_stream::putch(int value) {
         if(nullptr==m_stream) return 0;
         return m_stream->write((uint8_t)value);
     } 
@@ -279,7 +279,7 @@ namespace io {
         }
         return 0;
     }
-    int file_stream::getc() {
+    int file_stream::getch() {
         if(!m_file) return -1;
         return m_file.read();
     }
@@ -289,7 +289,7 @@ namespace io {
         //m_file.flush();
         return s;
     }
-    int file_stream::putc(int value) {
+    int file_stream::putch(int value) {
         if(!m_file) return 0;
         size_t s = m_file.write((uint8_t)value);
         //m_file.flush();
@@ -389,7 +389,7 @@ namespace io {
         if(0==m_caps.read) return 0;
         return fread(destination,1,size,m_fd);
     }
-    int file_stream::getc() {
+    int file_stream::getch() {
         if(0==m_caps.read) return -1;
         return fgetc(m_fd);
     }
@@ -397,7 +397,7 @@ namespace io {
         if(0==m_caps.write) return 0;
         return fwrite(source,1,size,m_fd);
     }
-    int file_stream::putc(int value) {
+    int file_stream::putch(int value) {
         if(0==m_caps.write) return -1;
         return fputc(value,m_fd);
     } 

@@ -44,9 +44,9 @@ namespace io {
     };
     class stream {
     public:
-        virtual int getc()=0;
+        virtual int getch()=0;
         virtual size_t read(uint8_t* destination,size_t size)=0;
-        virtual int putc(int value)=0;
+        virtual int putch(int value)=0;
         virtual size_t write(const uint8_t* source,size_t size)=0;
         virtual unsigned long long seek(long long position,seek_origin origin=seek_origin::start)=0;
         virtual stream_caps caps() const=0;
@@ -84,8 +84,8 @@ namespace io {
         buffer_stream& operator=(buffer_stream&& rhs);
         uint8_t* handle();
         void set(uint8_t* buffer,size_t size);
-        virtual int getc();
-        virtual int putc(int value);
+        virtual int getch();
+        virtual int putch(int value);
         virtual stream_caps caps() const;
         virtual size_t read(uint8_t* destination,size_t size);
         virtual size_t write(const uint8_t* source,size_t size);
@@ -104,8 +104,8 @@ namespace io {
         const_buffer_stream& operator=(const_buffer_stream&& rhs);
         const uint8_t* handle() const;
         void set(const uint8_t* buffer,size_t size);
-        virtual int getc();
-        virtual int putc(int value);
+        virtual int getch();
+        virtual int putch(int value);
         virtual stream_caps caps() const;
         virtual size_t read(uint8_t* destination,size_t size);
         virtual size_t write(const uint8_t* source,size_t size);
@@ -122,9 +122,9 @@ namespace io {
         arduino_stream(arduino_stream&& rhs);
         arduino_stream& operator=(arduino_stream&& rhs);
         virtual size_t read(uint8_t* destination,size_t size);
-        virtual int getc();
+        virtual int getch();
         virtual size_t write(const uint8_t* source,size_t size);
-        virtual int putc(int value);
+        virtual int putch(int value);
         virtual unsigned long long seek(long long position, seek_origin origin=seek_origin::start);
         virtual stream_caps caps() const;
     };
@@ -148,9 +148,9 @@ namespace io {
         File& handle() const;
         void set(File& file);
         virtual size_t read(uint8_t* destination,size_t size);
-        virtual int getc();
+        virtual int getch();
         virtual size_t write(const uint8_t* source,size_t size);
-        virtual int putc(int value);
+        virtual int putch(int value);
         virtual unsigned long long seek(long long position, seek_origin origin=seek_origin::start);
         void close();
 #else
@@ -161,9 +161,9 @@ namespace io {
         FILE* handle() const;
         void set(const char* name,file_mode mode = file_mode::read);
         virtual size_t read(uint8_t* destination,size_t size);
-        virtual int getc();
+        virtual int getch();
         virtual size_t write(const uint8_t* source,size_t size);
-        virtual int putc(int value);
+        virtual int putch(int value);
         virtual unsigned long long seek(long long position, seek_origin origin=seek_origin::start);
         void close();
 #endif
