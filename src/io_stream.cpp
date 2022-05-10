@@ -1,4 +1,4 @@
-#include <htcw_bits.hpp>
+#include <htcw_endian.hpp>
 #include <io_stream.hpp>
 namespace io {
     buffer_stream::buffer_stream() : m_begin(nullptr),m_current(nullptr),m_size(0) {}

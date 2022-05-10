@@ -1,6 +1,6 @@
 #ifndef HTCW_STREAM_HPP
 #define HTCW_STREAM_HPP
-#include <htcw_bits.hpp>
+#include <htcw_endian.hpp>
 #ifdef ARDUINO
 #include <Arduino.h>
 #ifdef SAMD_SERIES 
