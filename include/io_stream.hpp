@@ -4,10 +4,13 @@
 #ifdef ARDUINO
 #include <Arduino.h>
 #ifdef SAMD_SERIES 
+#ifndef IO_SEEED_FS
     #define IO_NO_FS
+#endif
 #endif
 #ifdef ARDUINO_ARCH_STM32
     #define IO_NO_FS
+
 #endif
 #if defined(ARDUINO_ARDUINO_NANO33BLE) || defined(ARDUINO_ARCH_MBED_RP2040)|| defined(ARDUINO_ARCH_RP2040)
     #define IO_NO_FS
@@ -16,7 +19,9 @@
     #ifdef IO_ARDUINO_SD_FS
         #include <SD.h>
     #else
-        #include <FS.h>
+        #if !defined(SAMD_SERIES)
+            #include <FS.h>
+        #endif
     #endif
 #endif
 #if defined(ESP_PLATFORM) || defined(ARDUINO_ARCH_ESP8266)
@@ -30,6 +35,10 @@
     #include <stdio.h>
     #include <string.h>
     #include <inttypes.h>
+#endif
+#if defined(SAMD_SERIES) && defined(IO_SEEED_FS)
+    #include <Seeed_FS.h>
+    #include "SD/Seeed_SD.h"
 #endif
 namespace io {
     struct stream_caps {
