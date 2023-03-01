@@ -95,7 +95,7 @@ namespace io {
             if(nullptr==m_stream) {
                 return closed;
             }
-            int result = m_stream->getc();
+            int result = m_stream->getch();
             if(-1==result)
                 return end_of_input;
             return result;
