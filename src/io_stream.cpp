@@ -200,6 +200,8 @@ namespace io {
 #ifdef ARDUINO
     arduino_stream::arduino_stream(Stream* stream) : m_stream(stream) {
     }
+    arduino_stream::arduino_stream() : m_stream(nullptr) {
+    }
     arduino_stream::arduino_stream(arduino_stream&& rhs) : m_stream(rhs.m_stream) {
         rhs.m_stream=nullptr;
     }
@@ -208,12 +210,25 @@ namespace io {
         rhs.m_stream=nullptr;
         return *this;
     }
+    Stream* arduino_stream::handle() {
+        return m_stream;
+    }
+    void arduino_stream::set(Stream* stream) {
+        m_stream = stream;
+    }
     size_t arduino_stream::read(uint8_t* destination,size_t size) {
         if(nullptr==m_stream) return 0;
-        return m_stream->readBytes(destination,size);
+        for(int i = 0; i < 1000 && !m_stream->available(); ++i) {
+            delay(1);
+        }
+        size = m_stream->readBytes(destination,size);
+        return size;
     }
     int arduino_stream::getch() {
         if(nullptr==m_stream) return -1;
+        for(int i = 0; i < 1000 && !m_stream->available(); ++i) {
+            delay(1);
+        }
         return m_stream->read();
     }
     size_t arduino_stream::write(const uint8_t* source,size_t size) {
@@ -229,8 +244,7 @@ namespace io {
     }
     stream_caps arduino_stream::caps() const {
         stream_caps c;
-        c.read = 1;
-        c.write = 1;
+        c.read = c.write = (m_stream!=nullptr);
         c.seek = 0;
         return c;
     }

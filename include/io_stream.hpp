@@ -127,9 +127,12 @@ namespace io {
         arduino_stream(const arduino_stream& rhs) = delete;
         arduino_stream& operator=(const arduino_stream& rhs)=delete;
     public:
+        arduino_stream();
         arduino_stream(Stream* stream);
         arduino_stream(arduino_stream&& rhs);
         arduino_stream& operator=(arduino_stream&& rhs);
+        Stream* handle();
+        void set(Stream* stream);
         virtual size_t read(uint8_t* destination,size_t size);
         virtual int getch();
         virtual size_t write(const uint8_t* source,size_t size);
