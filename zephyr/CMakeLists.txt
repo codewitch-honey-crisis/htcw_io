@@ -8,7 +8,7 @@ set(ZEPHYR_CURRENT_LIBRARY htcw_io)
 #include_directories(${ZEPHYR_BASE}/lib/???/htcw_bits)
 zephyr_include_directories(../include/)
 
-zephyr_interface_library_named(HTCW_BITS)
+zephyr_interface_library_named(HTCW_IO)
 
 zephyr_library()
 zephyr_library_sources(../src/)
