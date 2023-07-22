@@ -10,8 +10,6 @@ zephyr_include_directories(../include/)
 
 zephyr_interface_library_named(HTCW_IO)
 
-zephyr_library_include_directories(../../htcw_bits/include/)
-
 zephyr_library()
 zephyr_library_sources(../src/io_stream.cpp)
 #zephyr_library_sources_ifdef(CONFIG_PARAM_DEF, file.cpp)
