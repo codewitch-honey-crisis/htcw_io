@@ -332,6 +332,7 @@ namespace io {
         m_file.close();
     }
 #else
+    #include <stdio.h>
     file_stream::file_stream(const char* name,file_mode mode) : m_fd(nullptr), m_caps({0,0,0}) {
         set(name,mode);
     }
