@@ -14,6 +14,6 @@ zephyr_library()
 zephyr_library_sources(../src/)
 #zephyr_library_sources_ifdef(CONFIG_PARAM_DEF, file.cpp)
 zephyr_library_link_libraries(HTCW_IO)
-#target_link_libraries(HTCW_IO INTERFACE zephyr_interface)
+target_link_libraries(HTCW_IO INTERFACE zephyr_interface)
 
 endif()
