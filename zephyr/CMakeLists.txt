@@ -11,7 +11,7 @@ zephyr_include_directories(../include/)
 zephyr_interface_library_named(HTCW_IO)
 
 zephyr_library()
-zephyr_library_sources(../src/)
+zephyr_library_sources(../src/io_stream.hpp)
 #zephyr_library_sources_ifdef(CONFIG_PARAM_DEF, file.cpp)
 zephyr_library_link_libraries(HTCW_IO)
 target_link_libraries(HTCW_IO INTERFACE zephyr_interface)
