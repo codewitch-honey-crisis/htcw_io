@@ -5,7 +5,7 @@
 if(CONFIG_HTCW_IO)
 zephyr_library()
 #include_directories(${ZEPHYR_BASE}/lib/???/htcw_bits)
-zephyr_compile_definitions(IO_NO_FS)
+#zephyr_compile_definitions(IO_NO_FS)
 zephyr_include_directories(../include/)
 zephyr_library_include_directories(../include/)
 zephyr_interface_library_named(HTCW_IO)
