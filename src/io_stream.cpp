@@ -189,7 +189,7 @@ namespace io {
                     p=(size_t)(offs+position);
                 break;
             case seek_origin::end:
-                return seek(m_size-position,seek_origin::start);
+                return seek(m_size+position,seek_origin::start);
             default:
                 return offs;
         }
