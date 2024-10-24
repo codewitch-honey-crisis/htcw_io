@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
+# get dependecies
 include(FetchContent)
 FetchContent_Declare(htcw_bits
     GIT_REPOSITORY https://github.com/codewitch-honey-crisis/htcw_bits.git
