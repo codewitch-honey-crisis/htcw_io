@@ -149,14 +149,14 @@ namespace io {
             m_capture_flush(rhs.m_capture_flush),
             m_capture_flush_state(rhs.m_capture_flush_state),
             m_stream(rhs.m_stream) {
-            memcpy(m_capture,rhs.m_capture,m_capture_size+1);
+            memcpy(m_capture,rhs.m_capture,rhs.m_capture_size+1);
             rhs.m_stream = nullptr;
         }
         lex_source& operator=(lex_source&& rhs) {
             m_state=rhs.m_state;
             m_current=rhs.m_current;
             m_position=rhs.m_position;
-            memcpy(m_capture,rhs.m_capture,m_capture_size+1);
+            memcpy(m_capture,rhs.m_capture,rhs.m_capture_size+1);
             m_capture_size=rhs.m_capture_size;
             m_capture_flush = rhs.m_capture_flush;
             m_capture_flush_state = rhs.m_capture_flush_state;
@@ -215,7 +215,7 @@ namespace io {
         }
         void set_flush_capture(bool(*callback)(const char*,size_t,void*),void* state) {
             flush_capture();
-            m_capture_flush_state= callback;
+            m_capture_flush= callback;
             m_capture_flush_state = state;
         }
         void reset() {
