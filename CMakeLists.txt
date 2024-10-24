@@ -9,9 +9,9 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 include(FetchContent)
 FetchContent_Declare(htcw_bits
     GIT_REPOSITORY https://github.com/codewitch-honey-crisis/htcw_bits.git
-    GIT_TAG 1.0.13
+    GIT_TAG 1.0.14
     GIT_SHALLOW ON
-    FIND_PACKAGE_ARGS 1.0.13
+    FIND_PACKAGE_ARGS 1.0.14
 )
 
 FetchContent_MakeAvailable(htcw_bits)
