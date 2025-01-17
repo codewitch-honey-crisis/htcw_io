@@ -19,6 +19,6 @@ FetchContent_MakeAvailable(htcw_bits)
 add_library(htcw_io src/io_stream.cpp)
 target_link_libraries(htcw_io htcw_bits)
 target_include_directories(htcw_io PUBLIC
-    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_SOURCE_DIR}"
     "${PROJECT_BINARY_DIR}"
 )
