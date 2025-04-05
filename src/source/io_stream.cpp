@@ -338,6 +338,11 @@ namespace io {
     }
 #else
     #include <stdio.h>
+    file_stream::file_stream() : m_fd(nullptr) {
+        m_caps.read=0;
+        m_caps.write=0;
+        m_caps.seek=0;
+    }
     file_stream::file_stream(const char* name,file_mode mode) : m_fd(nullptr), m_caps({0,0,0}) {
         set(name,mode);
     }

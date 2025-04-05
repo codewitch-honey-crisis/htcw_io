@@ -152,8 +152,8 @@ namespace io {
         file_stream(const file_stream& rhs) = delete;
         file_stream& operator=(const file_stream& rhs)=delete;
     public:
-#ifdef ARDUINO
         file_stream();
+#ifdef ARDUINO
         file_stream(File& file);
         file_stream(file_stream&& rhs);
         file_stream& operator=(file_stream&& rhs);
