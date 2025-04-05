@@ -181,6 +181,33 @@ namespace io {
 #endif
         virtual stream_caps caps() const;
     };
+
+#ifdef ARDUINO
+    class c_file_stream final : public stream {
+        FILE* m_fd;
+        io::stream_caps m_caps;
+        c_file_stream(const c_file_stream& rhs) = delete;
+        c_file_stream& operator=(const c_file_stream& rhs)=delete;
+    public:
+        c_file_stream();
+        c_file_stream(const char* name,file_mode mode=file_mode::read);
+        c_file_stream(c_file_stream&& rhs);
+        c_file_stream& operator=(c_file_stream&& rhs);
+        ~c_file_stream();
+        FILE* handle() const;
+        void set(const char* name,file_mode mode = file_mode::read);
+        virtual size_t read(uint8_t* destination,size_t size);
+        virtual int getch();
+        virtual size_t write(const uint8_t* source,size_t size);
+        virtual int putch(int value);
+        virtual unsigned long long seek(long long position, seek_origin origin=seek_origin::start);
+        void close();
+        virtual io::stream_caps caps() const;
+    };
+#else
+    using c_file_stream = file_stream;
+#endif
+
 #endif
     class stream_reader_base {
     protected:

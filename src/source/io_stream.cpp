@@ -435,8 +435,114 @@ namespace io {
     stream_caps file_stream::caps() const {
         return m_caps;
     }   
-#endif
+#ifdef ARDUINO
 
+    c_file_stream::c_file_stream(const char* name,file_mode mode) : m_fd(nullptr), m_caps({0,0,0}) {
+        set(name,mode);
+    }
+    c_file_stream::c_file_stream() : m_fd(nullptr), m_caps({0,0,0}) {
+        
+    }
+    c_file_stream::c_file_stream(c_file_stream&& rhs) : m_fd(rhs.m_fd),m_caps(rhs.m_caps) {
+        rhs.m_fd=nullptr;
+        rhs.m_caps={0,0,0};
+    }
+    c_file_stream& c_file_stream::operator=(c_file_stream&& rhs) {
+        m_fd=rhs.m_fd;
+        m_caps=rhs.m_caps;
+        rhs.m_fd=nullptr;
+        rhs.m_caps={0,0,0};
+        return *this;
+    }
+    c_file_stream::~c_file_stream() {
+        close();
+    }
+    FILE* c_file_stream::handle() const {
+        return m_fd;
+    }
+    void c_file_stream::set(const char* name,file_mode mode) {
+        close();
+        if((int)file_mode::append==((int)mode & (int)file_mode::append)) {
+            if((int)file_mode::read==((int)mode & (int)file_mode::read)) {
+                m_fd = fopen(name,"ab+");
+                if(nullptr!=m_fd) {
+                    m_caps.read=1;
+                    m_caps.write=1;
+                    m_caps.seek=1;
+                }
+                return;
+            }
+            m_fd = fopen(name,"ab");
+            if(nullptr!=m_fd) {
+                m_caps.read=0;
+                m_caps.write=1;
+                m_caps.seek=1;
+            }
+            return;
+        }
+        if((int)file_mode::write==((int)mode & (int)file_mode::write)) {
+            if((int)file_mode::read==((int)mode & (int)file_mode::read)) {
+                m_fd = fopen(name,"wb+");
+                if(nullptr!=m_fd) {
+                    m_caps.read=1;
+                    m_caps.write=1;
+                    m_caps.seek=1;
+                }
+                return;
+            }
+            m_fd = fopen(name,"wb");
+            if(nullptr!=m_fd) {
+                m_caps.read=0;
+                m_caps.write=1;
+                m_caps.seek=1;
+            }
+            return;
+        }
+        if((int)file_mode::read==((int)mode & (int)file_mode::read)) {
+            m_fd = fopen(name,"rb");
+            if(nullptr!=m_fd) {
+                m_caps.read=1;
+                m_caps.write=0;
+                m_caps.seek=1;
+            }
+        }
+    }
+    size_t c_file_stream::read(uint8_t* destination,size_t size) {
+        if(0==m_caps.read) return 0;
+        return fread(destination,1,size,m_fd);
+    }
+    int c_file_stream::getch() {
+        if(0==m_caps.read) return -1;
+        return fgetc(m_fd);
+    }
+    size_t c_file_stream::write(const uint8_t* source,size_t size) {
+        if(0==m_caps.write) return 0;
+        return fwrite(source,1,size,m_fd);
+    }
+    int c_file_stream::putch(int value) {
+        if(0==m_caps.write) return -1;
+        return fputc(value,m_fd);
+    } 
+    unsigned long long c_file_stream::seek(long long position, seek_origin origin) {
+        if(0==m_caps.seek) return 0; // should always be true unless uninitialized
+        // on error we still need to report the current position
+        // so we continue regardless
+        if(position!=0||origin!=seek_origin::current)
+            fseek(m_fd,(long int)position,(int)origin);
+        return ftell(m_fd);
+    }
+    void c_file_stream::close() {
+        if(nullptr!=m_fd) {
+            m_caps = {0,0,0};
+            fclose(m_fd);
+            m_fd=nullptr;
+        }
+    }
+    stream_caps c_file_stream::caps() const {
+        return m_caps;
+    }   
+#endif
+#endif
     stream_reader_le::stream_reader_le(io::stream* stream) : stream_reader_base(stream) {}
     bool stream_reader_le::read(uint8_t* out_value) const {
         if(nullptr==m_stream || nullptr==out_value) {
