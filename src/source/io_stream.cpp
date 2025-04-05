@@ -253,8 +253,13 @@ namespace io {
 
 #ifndef IO_NO_FS
 #ifdef ARDUINO
-    file_stream::file_stream(File& file) : m_file(file){
-        if(!m_file) {
+    file_stream::file_stream() : m_file(nullptr) {
+        m_caps.read=0;
+        m_caps.write=0;
+        m_caps.seek=0;
+    }
+    file_stream::file_stream(File& file) : m_file(&file){
+        if(!file) {
             m_caps.read=0;
             m_caps.write=0;
             m_caps.seek=0;
@@ -275,7 +280,7 @@ namespace io {
     }
     file_stream::~file_stream() {
     }
-    File& file_stream::handle() const {
+    File* file_stream::handle() const {
         return m_file;
     }
     void file_stream::set(File& file) {
@@ -284,52 +289,52 @@ namespace io {
         } else {
             m_caps.read = m_caps.write = m_caps.seek = 1;
         }
-        m_file = file;
+        m_file = &file;
     }
     size_t file_stream::read(uint8_t* destination,size_t size) {
         if(!m_file) return 0;
-        if(0!=m_file.readBytes((char*)destination,size)) {
+        if(0!=m_file->readBytes((char*)destination,size)) {
             return size;
         }
         return 0;
     }
     int file_stream::getch() {
         if(!m_file) return -1;
-        return m_file.read();
+        return m_file->read();
     }
     size_t file_stream::write(const uint8_t* source,size_t size) {
         if(!m_file) return 0;
-        size_t s= m_file.write(source,size);
+        size_t s= m_file->write(source,size);
         //m_file.flush();
         return s;
     }
     int file_stream::putch(int value) {
         if(!m_file) return 0;
-        size_t s = m_file.write((uint8_t)value);
+        size_t s = m_file->write((uint8_t)value);
         //m_file.flush();
         return s;
     } 
     unsigned long long file_stream::seek(long long position, seek_origin origin) {    
         switch(origin) {
             case seek_origin::start:
-                m_file.seek((uint32_t)position);
+                m_file->seek((uint32_t)position);
                 break;
             case seek_origin::current:
                 if(0!=position) {
-                    m_file.seek(uint32_t(position+m_file.position()));
+                    m_file->seek(uint32_t(position+m_file->position()));
                 }
                 break;
             case seek_origin::end:
-                m_file.seek(uint32_t(m_file.size()+position));
+                m_file->seek(uint32_t(m_file->size()+position));
                 break;
         }
-        return m_file.position();
+        return m_file->position();
     }
     void file_stream::close() {
         if(!m_file) {
             return;;
         }
-        m_file.close();
+        m_file->close();
     }
 #else
     #include <stdio.h>
