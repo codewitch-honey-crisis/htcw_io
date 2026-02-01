@@ -1,6 +1,6 @@
 {
     "name": "htcw_io",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "description": "Provides io classes",
     "keywords": ["stream","io"],
     "authors": {
@@ -20,6 +20,6 @@
         "url": "https://github.com/codewitch-honey-crisis/htcw_io.git"
     },
     "dependencies": {
-        "codewitch-honey-crisis/htcw_bits": "^1.0.16"
+        "codewitch-honey-crisis/htcw_bits": "^1.0.17"
     }
 }
