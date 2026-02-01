@@ -3,5 +3,5 @@ description: "Provides STL free stream io"
 dependencies:
   idf:
     version: ">=5.0.0"
-  htcw_bits: "^1.0.17"
+  codewitch-honey-crisis/htcw_bits: "^1.0.17"
   
